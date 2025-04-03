@@ -1,12 +1,13 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import random
 import uuid
 
-card_types = ['G`ishtin', 'Toppon', 'Qora', 'Chilik']
-card_units = ['6', '7', '8', '9', '10', 'Valet', 'Dama', 'Karol']
-all_cards = [{"name": name, "type": tip, "value": index + 6} 
+card_types = ['diamonds', 'clubs', 'hearts', 'spades']
+card_units = ['6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
+all_cards = [{"name": name, "type": tip, "value": index + 6, "img": f"/static/cards/{name}_of_{tip}.png"} 
              for index, name in enumerate(card_units) 
              for tip in card_types]
 
@@ -14,8 +15,14 @@ all_cards = [{"name": name, "type": tip, "value": index + 6}
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"))
-
-
+# CORS setup (if needed)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 with open("game.html") as f:
     html = str(f.read())
 
@@ -61,7 +68,8 @@ async def create(playerName: str, cardsPerPlayer: int):
         "players": [{
             "name": playerName, 
             "cards": [],
-            "won": False
+            "won": False,
+            "que": True
         }]
     }
     manager.active_games.append(newGame)
@@ -73,13 +81,19 @@ async def join(playerName: str, copyId: str):
     
     for game in manager.active_games:
         if game["copyId"] == copyId:
+            for player in game["players"]:
+                if player["name"] == playerName:
+                    return game
+                continue
+            
             game["players"].append({
-            "name": playerName, 
-            "cards": [],
-            "won": False
-        })
+                "name": playerName, 
+                "cards": [],
+                "won": False,
+                "que": False
+            })
    
-        return game
+            return game
 
 
 @app.put("/deal-game")
@@ -87,12 +101,15 @@ async def deal(copyId: str):
     
     for game in manager.active_games:
         if game["copyId"] == copyId:
-           for player in game["players"]:
-               player['cards'] = random.choices(game['cardStore'], k=game['cardsPerPlayer'])
+            for player in game["players"]:
+               player['cards'] = random.sample(game['cardStore'], k=game['cardsPerPlayer'])
                for pc in player['cards']:
-                game['cardStore'].remove(pc)
+                try:
+                    game['cardStore'].remove(pc)
+                except Exception as e:
+                    print(pc)
    
-        return game
+            return game
 
 @app.put("/put-card")
 async def put_card(card: dict, playerName: str, copyId: str):
