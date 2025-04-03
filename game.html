@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Card 108 Game</title>
+    <link
+      href="/static/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div class="container p-2" style="height: 100vh">
+      <div class="card text-center h-100" style="display: none;" id="activeGameCard">
+        <h1>Game: <span id="copyId" class="text-primary"></span></h1>
+        <div class="row px-2" id="players">
+
+        </div>
+      </div>
+      <div class="card text-center h-100" id="newGameCard">
+        <h1>Let's start a new game</h1>
+        <input
+          id="playerName"
+          type="text"
+          class="form-control my-2 w-25 mx-auto"
+          placeholder="Your NAME"
+        />
+        <input
+          id="cardsPerPlayer"
+          type="number"
+          min="3"
+          class="form-control my-2 w-25 mx-auto"
+          placeholder="Cards Per Player"
+        />
+        <button
+          onclick="startGame()"
+          class="btn btn-lg btn-primary w-25 mx-auto"
+        >
+          start
+        </button>
+      </div>
+    </div>
+  </body>
+  <script
+    src="/static/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    var client_id = Date.now();
+    httpURL = "http://localhost:8000";
+    document.querySelector("#ws-id").textContent = client_id;
+    var ws = new WebSocket(`ws://localhost:8000/ws/${client_id}`);
+    ws.onmessage = function (event) {
+      var messages = document.getElementById("messages");
+      var message = document.createElement("li");
+      var content = document.createTextNode(event.data);
+      message.appendChild(content);
+      messages.appendChild(message);
+    };
+
+    function post(url, data = {}) {
+      return fetch(`${httpURL}/${url}`, {
+        method: "POST",
+        data: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      }).then(res => res.json()) ;
+    }
+    function put(url) {
+      return fetch(`${httpURL}/${url}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+    }
+
+    function get(url) {
+      return fetch(`${httpURL}/${url}`);
+    }
+
+    function sendMessage(event) {
+      var input = document.getElementById("messageText");
+      ws.send(input.value);
+      input.value = "";
+      event.preventDefault();
+    }
+
+    function startGame() {
+      post(
+        "create-game?playerName=" +
+          document.getElementById("playerName").value +
+          "&cardsPerPlayer=" +
+          document.getElementById("cardsPerPlayer").value
+      ).then(data => {
+        document.getElementById("newGameCard").style.display = "none";
+        document.getElementById("activeGameCard").style.display = "block";
+        document.getElementById("copyId").innerHTML = data.copyId
+        document.getElementById("players").innerHTML  = ""
+
+        data.players.forEach(player => {
+            document.getElementById("players").innerHTML  += `
+        <div class="col-md-3">
+            <div class="card p-2">
+                <h3>${player.name}</h3>
+            </div>
+        </div>
+        `
+        });
+
+
+      });
+    }
+  </script>
+</html>
