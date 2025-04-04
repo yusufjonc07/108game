@@ -12,110 +12,174 @@
   </head>
   <body class="bg-secondary">
     <div class="container p-2" style="height: 100vh">
-      <div
-        class="card text-center h-100"
-        style="display: none"
-        id="activeGameCard"
-      >
-        <div class="card-body">
-          <h1>Game: <span id="copyId" class="text-primary"></span></h1>
-        <hr>
-        <div class="row  justify-content-center px-2" id="players"></div>
-        <img width="200" class="m-3" id="openCard" src="" alt="First Card">
+      <div class="row" id="activeGameCard" style="display: none">
+        <div class="col-md-8">
+          <div class="card text-center">
+            <div class="card-body">
+              <h1>Game: <span id="copyId" class="text-primary"></span></h1>
+              <hr />
+              <div class="row justify-content-center px-2" id="players"></div>
+              <img
+                width="200"
+                class="m-3"
+                id="backCard"
+                src="/static/images/back.png"
+                alt="First Card"
+              />
+              <img
+                width="200"
+                class="m-3"
+                id="openCard"
+                src=""
+                alt="First Card"
+              />
+            </div>
+            <div
+              class="card-footer justify-content-center d-flex gap-2"
+              id="myCards"
+            >
+              <button onclick="dealGame()" class="btn btn-primary btn-lg">
+                Give cards for each player
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="card-footer justify-content-center d-flex gap-2" id="myCards">
-            <button onclick="dealGame()" class="btn btn-primary btn-lg">Give cards for each player</button>
+        <div class="col-md-4">
+          <div class="card" id="chat2">
+            <div
+              class="card-header d-flex justify-content-between align-items-center p-3"
+            >
+              <h5 class="mb-0">Chat</h5>
+              <button
+                type="button"
+                data-mdb-button-init
+                data-mdb-ripple-init
+                class="btn btn-primary btn-sm"
+                data-mdb-ripple-color="dark"
+              >
+                Let's Chat App
+              </button>
+            </div>
+            <div
+              class="card-body"
+              style="position: relative; height: 400px"
+              id="messages"
+            ></div>
+            <div
+              class="card-footer text-muted d-flex justify-content-start align-items-center p-3"
+            >
+              <img
+                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                alt="avatar 3"
+                style="width: 40px; height: 100%"
+              />
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="exampleFormControlInput1"
+                placeholder="Type message"
+              />
+              <a class="ms-1 text-muted" href="#!"
+                ><i class="fas fa-paperclip"></i
+              ></a>
+              <a class="ms-3 text-muted" href="#!"
+                ><i class="fas fa-smile"></i
+              ></a>
+              <a class="ms-3" href="#!"><i class="fas fa-paper-plane"></i></a>
+            </div>
+          </div>
         </div>
       </div>
+
       <div class="card text-center h-100" id="newGameCard">
         <img
           class="mx-auto col-md-8 col-lg-6 col-12"
           src="/static/images/cards.png"
           alt=""
         />
-        
-       <div class="d-flex gap-2 justify-content-center mt-5">
-        <div class="col-md-3">
-          <div class=" card card-body">
-            <h2 class="">Create a new game</h2>
-            <hr>
-            <div class="d-flex">
-              <div class="w-75 gap-1 me-2">
-                <input
-                  id="playerName"
-                  type="text"
-                  class="form-control mb-2"
-                  placeholder="Your NAME"
-                />
-                <input
-                  id="cardsPerPlayer"
-                  type="number"
-                  min="3"
-                  class="form-control"
-                  placeholder="Cards Per Player"
-                />
-              </div>
-              <button onclick="startGame()" class="btn btn-dark">
-                <svg
-                  width="35"
-                  height="35"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M5 4.98951C5 4.01835 5 3.53277 5.20249 3.2651C5.37889 3.03191 5.64852 2.88761 5.9404 2.87018C6.27544 2.85017 6.67946 3.11953 7.48752 3.65823L18.0031 10.6686C18.6708 11.1137 19.0046 11.3363 19.1209 11.6168C19.2227 11.8621 19.2227 12.1377 19.1209 12.383C19.0046 12.6635 18.6708 12.886 18.0031 13.3312L7.48752 20.3415C6.67946 20.8802 6.27544 21.1496 5.9404 21.1296C5.64852 21.1122 5.37889 20.9679 5.20249 20.7347C5 20.467 5 19.9814 5 19.0103V4.98951Z"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+
+        <div class="d-flex gap-2 justify-content-center mt-5">
+          <div class="col-md-3">
+            <div class="card card-body">
+              <h2 class="">Create a new game</h2>
+              <hr />
+              <div class="d-flex">
+                <div class="w-75 gap-1 me-2">
+                  <input
+                    id="playerName"
+                    type="text"
+                    class="form-control mb-2"
+                    placeholder="Your NAME"
                   />
-                </svg>
-              </button>
+                  <input
+                    id="cardsPerPlayer"
+                    type="number"
+                    min="3"
+                    class="form-control"
+                    placeholder="Cards Per Player"
+                  />
+                </div>
+                <button onclick="startGame()" class="btn btn-dark">
+                  <svg
+                    width="35"
+                    height="35"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 4.98951C5 4.01835 5 3.53277 5.20249 3.2651C5.37889 3.03191 5.64852 2.88761 5.9404 2.87018C6.27544 2.85017 6.67946 3.11953 7.48752 3.65823L18.0031 10.6686C18.6708 11.1137 19.0046 11.3363 19.1209 11.6168C19.2227 11.8621 19.2227 12.1377 19.1209 12.383C19.0046 12.6635 18.6708 12.886 18.0031 13.3312L7.48752 20.3415C6.67946 20.8802 6.27544 21.1496 5.9404 21.1296C5.64852 21.1122 5.37889 20.9679 5.20249 20.7347C5 20.467 5 19.9814 5 19.0103V4.98951Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card card-body">
+              <h2 class="">Join a game</h2>
+              <hr />
+              <div class="d-flex">
+                <div class="w-75 gap-1 me-2">
+                  <input
+                    id="playerName2"
+                    type="text"
+                    class="form-control mb-2"
+                    placeholder="Your NAME"
+                  />
+                  <input
+                    id="gameId"
+                    type="text"
+                    maxlength="6"
+                    class="form-control"
+                    placeholder="Game ID"
+                  />
+                </div>
+                <button onclick="joinGame()" class="btn btn-warning">
+                  <svg
+                    width="35"
+                    height="35"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 4.98951C5 4.01835 5 3.53277 5.20249 3.2651C5.37889 3.03191 5.64852 2.88761 5.9404 2.87018C6.27544 2.85017 6.67946 3.11953 7.48752 3.65823L18.0031 10.6686C18.6708 11.1137 19.0046 11.3363 19.1209 11.6168C19.2227 11.8621 19.2227 12.1377 19.1209 12.383C19.0046 12.6635 18.6708 12.886 18.0031 13.3312L7.48752 20.3415C6.67946 20.8802 6.27544 21.1496 5.9404 21.1296C5.64852 21.1122 5.37889 20.9679 5.20249 20.7347C5 20.467 5 19.9814 5 19.0103V4.98951Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class=" card card-body">
-            <h2 class="">Join a game</h2>
-            <hr>
-            <div class="d-flex">
-              <div class="w-75 gap-1 me-2">
-                <input
-                  id="playerName2"
-                  type="text"
-                  class="form-control mb-2"
-                  placeholder="Your NAME"
-                />
-                <input
-                  id="gameId"
-                  type="text"
-                  maxlength="6"
-                  class="form-control"
-                  placeholder="Game ID"
-                />
-              </div>
-              <button onclick="joinGame()" class="btn btn-warning">
-                <svg
-                  width="35"
-                  height="35"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M5 4.98951C5 4.01835 5 3.53277 5.20249 3.2651C5.37889 3.03191 5.64852 2.88761 5.9404 2.87018C6.27544 2.85017 6.67946 3.11953 7.48752 3.65823L18.0031 10.6686C18.6708 11.1137 19.0046 11.3363 19.1209 11.6168C19.2227 11.8621 19.2227 12.1377 19.1209 12.383C19.0046 12.6635 18.6708 12.886 18.0031 13.3312L7.48752 20.3415C6.67946 20.8802 6.27544 21.1496 5.9404 21.1296C5.64852 21.1122 5.37889 20.9679 5.20249 20.7347C5 20.467 5 19.9814 5 19.0103V4.98951Z"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-       </div>
       </div>
     </div>
   </body>

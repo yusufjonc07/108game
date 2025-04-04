@@ -32,22 +32,81 @@ class ConnectionManager:
         self.active_connections: list[WebSocket] = []
         self.active_games: list[object] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, client):
+        websocket, gameId, playerName = client
         await websocket.accept()
         self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, client):
+        websocket, gameId, playerName = client
         self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: str, copyId: str):
         for connection in self.active_connections:
+            
             await connection.send_text(message)
 
 
 manager = ConnectionManager()
+
+def canPut(game, player, card=None):
+    
+    if card:
+        if game['cardSheet'][-1]['name'] != card['name'] and game['cardSheet'][-1]['type'] != card['type']:
+            return False
+    
+    if player['que'] == False:
+        return False
+    
+    res = False
+    for cardOne in player['cards']:
+        if game['cardSheet'][-1]['name'] == cardOne['name'] or game['cardSheet'][-1]['type'] == cardOne['type']:
+            res = True
+    
+    return res       
+ 
+def takeCard(game, player):
+        
+    for playerOne in game["players"]:
+        if playerOne['name'] == player['name']:
+            player['cards'].append(random.sample(game['cardStore'], k=1))
+            game['cardStore'].remove(player['cards'][-1])
+            return game
+    
+         
+
+def passQue(game, playerName):
+    players = game['players']
+    num_players = len(players)
+
+    # Find the index of the player with the given name
+    current_index = next((i for i, p in enumerate(players) if p['name'] == playerName), None)
+
+    if current_index is None:
+        raise ValueError(f"No player found with name: {playerName}")
+
+    # Reset all players' que to False
+    for p in players:
+        p['que'] = False
+
+    # Find the next player who hasn't won
+    for i in range(1, num_players):
+        next_index = (current_index + i) % num_players
+        next_player = players[next_index]
+
+        if not next_player.get('won', False):
+            next_player['que'] = True
+            break
+    
+    if canPut(game, next_player) == False:
+        game = takeCard(game, next_player)
+        game = passQue(game, next_player['name'])
+        
+        
+    return game
 
 
 @app.get("/")
@@ -92,7 +151,7 @@ async def join(playerName: str, copyId: str):
                 "won": False,
                 "que": False
             })
-   
+            await manager.broadcast(f"{playerName} is joined", copyId)
             return game
 
 
@@ -102,13 +161,17 @@ async def deal(copyId: str):
     for game in manager.active_games:
         if game["copyId"] == copyId:
             for player in game["players"]:
-               player['cards'] = random.sample(game['cardStore'], k=game['cardsPerPlayer'])
-               for pc in player['cards']:
-                try:
+                player['cards'] = random.sample(game['cardStore'], k=game['cardsPerPlayer'])
+                for pc in player['cards']:
                     game['cardStore'].remove(pc)
-                except Exception as e:
-                    print(pc)
-   
+            await manager.broadcast(f"Cards have been dealed!", copyId)
+            return game
+
+@app.get("/game/{copyId}")
+async def one(copyId: str):
+    
+    for game in manager.active_games:
+        if game["copyId"] == copyId:
             return game
 
 @app.put("/put-card")
@@ -116,14 +179,20 @@ async def put_card(card: dict, playerName: str, copyId: str):
     
     for game in manager.active_games:
         if game["copyId"] == copyId:
+            
             for player in game["players"]:
                 if player['name'] == playerName:
+                    
+                    if canPut(game, player) == False:
+                        return game
 
                     if player['won'] == True:
                         raise HTTPException(400, "You are already won")
                     
-                    if not player['cards'].remove(card):
+                    if not card in player['cards']:
                         raise HTTPException(400, "You are cheating bro")
+                    else:
+                        player['cards'].remove(card)
                     
                     lastCard = game['cardSheet'][-1]
                     
@@ -135,23 +204,26 @@ async def put_card(card: dict, playerName: str, copyId: str):
                         
                     if len(player['cards']) == 0:        
                         player['won'] = True
-                        
-                    return player
+                    
+                    game["players"] = passQue(game, playerName)
+                    await manager.broadcast(f"{playerName} put {card['name']} {card['type']}", copyId)
+                    return game
                     
 @app.delete("/terminate-game")
 async def terminate(gameId: str):
     manager.active_games = [game for game in manager.active_games if game["copyId"] != gameId]
+    await manager.broadcast(f"Game was terminated", gameId)
     return manager.active_games
 
 
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    await manager.connect(websocket)
+@app.websocket("/ws/{gameId}/{clientName}")
+async def websocket_endpoint(websocket: WebSocket, gameId: str, clientName: str):
+    await manager.connect((websocket, gameId, clientName))
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.send_personal_message(f"You wrote: {data}", websocket)
-            await manager.broadcast(f"Client #{client_id} says: {data}")
+            await manager.send_personal_message(f"You wrote: {data}", (websocket, gameId, clientName))
+            await manager.broadcast(f"Client #{clientName} says: {data}", gameId)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{client_id} left the chat")
+        manager.disconnect((websocket, gameId, clientName))
+        await manager.broadcast(f"Client #{clientName} left the game")
